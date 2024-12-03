@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card";
+  import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$lib/components/ui/table";
@@ -15,15 +15,15 @@
   <Card>
     <CardHeader>
       <CardTitle class="text-2xl">🚤 Boat Comparison Tool</CardTitle>
-      <CardDescription>
-        Compare different boats and their associated costs to make an informed decision.
-        <ul class="mt-2 space-y-1 list-disc list-inside text-sm">
-          <li>Start by clicking "Add New Boat" and enter the vessel's basic information</li>
-          <li>Use the edit button (✏️) to add detailed costs in three categories: Cost To Sail, Upgrades, and Acquisition</li>
-          <li>Copy and paste boat images directly from websites using Ctrl+V in the edit mode</li>
-          <li>All changes are automatically saved as you edit</li>
-        </ul>
-      </CardDescription>
+      <div class="text-muted-foreground">
+        <p class="mb-2">Compare different boats and their associated costs to make an informed decision.</p>
+        <div class="mt-2 space-y-1 text-sm">
+          <p>• Start by clicking "Add New Boat" and enter the vessel's basic information</p>
+          <p>• Use the edit button (✏️) to add detailed costs in three categories: Cost To Sail, Upgrades, and Acquisition</p>
+          <p>• Copy and paste boat images directly from websites using Ctrl+V in the edit mode</p>
+          <p>• All changes are automatically saved as you edit</p>
+        </div>
+      </div>
     </CardHeader>
     <CardContent>
       <div class="mb-6">
