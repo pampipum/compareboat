@@ -1,12 +1,19 @@
-//SvelteKit 5 code
 <script>
-  let { data } = $props()
+  import { goto } from '$app/navigation';
+  import { Button } from '$lib/components/ui/button';
+
+  let { data, children } = $props()
   let { supabase } = $derived(data)
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      console.error(error)
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      
+      // Navigate to auth page after successful logout
+      await goto('/auth')
+    } catch (error) {
+      console.error('Error logging out:', error)
     }
   }
 </script>
@@ -16,16 +23,16 @@
     <nav class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
       <div class="flex justify-between">
         <a href="/" class="text-xl font-semibold">Home</a>
-        <button
+        <Button 
+          variant="destructive" 
           on:click={logout}
-          class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
         >
           Logout
-        </button>
+        </Button>
       </div>
     </nav>
   </header>
   <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-    <slot />
+    {@render children()}
   </main>
 </div>

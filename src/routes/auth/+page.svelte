@@ -1,169 +1,171 @@
-//SvelteKit 5 code
-<script>
-  let { data } = $props()
-  let { supabase } = $derived(data)
+<script lang="ts">
+  import { goto } from '$app/navigation';
+  import * as Card from '$lib/components/ui/card';
+  import { Button } from '$lib/components/ui/button';
+  import { Input } from '$lib/components/ui/input';
+  import { Label } from '$lib/components/ui/label';
+  import { Alert, AlertDescription } from '$lib/components/ui/alert';
+  import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
 
-  let email = ''
-  let password = ''
-  let confirmPassword = ''
-  let isLoading = false
-  let error = ''
+  let { data } = $props();
+  let { supabase } = $derived(data);
+
+  let email = $state('');
+  let password = $state('');
+  let confirmPassword = $state('');
+  let isLoading = $state(false);
+  let error = $state('');
 
   const handleSignUp = async () => {
     if (password !== confirmPassword) {
-      error = 'Passwords do not match'
-      return
+      error = 'Passwords do not match';
+      return;
     }
 
     if (password.length < 6) {
-      error = 'Password must be at least 6 characters'
-      return
+      error = 'Password must be at least 6 characters';
+      return;
     }
 
     try {
-      isLoading = true
-      error = ''
-      
+      isLoading = true;
+      error = '';
+
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
-      })
+      });
 
-      if (signUpError) throw signUpError
+      if (signUpError) throw signUpError;
 
-      // Show success message
-      error = 'Please check your email for a confirmation link.'
+      error = 'Please check your email for a confirmation link.';
     } catch (e) {
-      error = e.message
+      error = e.message;
     } finally {
-      isLoading = false
+      isLoading = false;
     }
-  }
+  };
 
   const handleSignIn = async () => {
     try {
-      isLoading = true
-      error = ''
-      
+      isLoading = true;
+      error = '';
+
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password
-      })
+      });
 
-      if (signInError) throw signInError
+      if (signInError) throw signInError;
+
+      // After successful sign in, verify the user's authenticity
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      // If we get here, sign in was successful - redirect to private area
+      await goto('/private');
 
     } catch (e) {
-      error = e.message
-    } finally {
-      isLoading = false
+      error = e.message;
+      isLoading = false;
     }
-  }
+  };
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-  <div class="w-full max-w-md space-y-8">
-    <!-- Header -->
-    <div class="text-center">
-      <h2 class="text-3xl font-bold tracking-tight">Welcome</h2>
-      <p class="mt-2 text-sm text-gray-600">
-        Please sign in to your account or create a new one
-      </p>
-    </div>
+<div class="container flex h-screen w-screen flex-col items-center justify-center">
+  <Card.Root class="w-full max-w-md">
+    <Card.Header class="space-y-1">
+      <Card.Title class="text-2xl font-semibold">Welcome</Card.Title>
+      <Card.Description>Sign in to your account or create a new one</Card.Description>
+    </Card.Header>
+    <Card.Content>
+      <Tabs defaultValue="signin" class="w-full">
+        <TabsList class="grid w-full grid-cols-2">
+          <TabsTrigger value="signin">Sign In</TabsTrigger>
+          <TabsTrigger value="signup">Sign Up</TabsTrigger>
+        </TabsList>
 
-    <!-- Form -->
-    <div class="mt-8">
-      <div class="space-y-6">
-        <!-- Email -->
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700">
-            Email address
-          </label>
-          <div class="mt-1">
-            <input
-              bind:value={email}
-              id="email"
-              name="email"
-              type="email"
-              required
-              class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-              placeholder="you@example.com"
-            />
-          </div>
-        </div>
-
-        <!-- Password -->
-        <div>
-          <label for="password" class="block text-sm font-medium text-gray-700">
-            Password
-          </label>
-          <div class="mt-1">
-            <input
-              bind:value={password}
-              id="password"
-              name="password"
-              type="password"
-              required
-              class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-              placeholder="••••••••"
-            />
-          </div>
-        </div>
-
-        <!-- Confirm Password (shown only for signup) -->
-        <div>
-          <label for="confirmPassword" class="block text-sm font-medium text-gray-700">
-            Confirm Password
-          </label>
-          <div class="mt-1">
-            <input
-              bind:value={confirmPassword}
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              required
-              class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-              placeholder="••••••••"
-            />
-          </div>
-        </div>
-
-        <!-- Error Message -->
-        {#if error}
-          <div class="rounded-md bg-red-50 p-4">
-            <div class="flex">
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">
-                  {error}
-                </h3>
-              </div>
+        <TabsContent value="signin">
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <Label for="signin-email">Email</Label>
+              <Input
+                id="signin-email"
+                type="email"
+                placeholder="you@example.com"
+                bind:value={email}
+              />
             </div>
-          </div>
-        {/if}
 
-        <!-- Buttons -->
-        <div class="space-y-4">
-          <button
-            type="button"
-            on:click={handleSignUp}
-            disabled={isLoading}
-            class="flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-          >
-            {isLoading ? 'Processing...' : 'Sign Up'}
-          </button>
-          
-          <button
-            type="button"
-            on:click={handleSignIn}
-            disabled={isLoading}
-            class="flex w-full justify-center rounded-md border border-blue-600 bg-white px-4 py-2 text-sm font-medium text-blue-600 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-          >
-            {isLoading ? 'Processing...' : 'Sign In'}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+            <div class="space-y-2">
+              <Label for="signin-password">Password</Label>
+              <Input 
+                id="signin-password" 
+                type="password" 
+                placeholder="••••••••"
+                bind:value={password} 
+              />
+            </div>
+
+            {#if error}
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            {/if}
+
+            <Button class="w-full" on:click={handleSignIn} disabled={isLoading}>
+              {isLoading ? 'Signing in...' : 'Sign In'}
+            </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="signup">
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <Label for="signup-email">Email</Label>
+              <Input
+                id="signup-email"
+                type="email"
+                placeholder="you@example.com"
+                bind:value={email}
+              />
+            </div>
+
+            <div class="space-y-2">
+              <Label for="signup-password">Password</Label>
+              <Input 
+                id="signup-password" 
+                type="password" 
+                placeholder="••••••••"
+                bind:value={password} 
+              />
+            </div>
+
+            <div class="space-y-2">
+              <Label for="confirm-password">Confirm Password</Label>
+              <Input 
+                id="confirm-password" 
+                type="password" 
+                placeholder="••••••••"
+                bind:value={confirmPassword} 
+              />
+            </div>
+
+            {#if error}
+              <Alert variant={error.includes('check your email') ? 'default' : 'destructive'}>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            {/if}
+
+            <Button class="w-full" on:click={handleSignUp} disabled={isLoading}>
+              {isLoading ? 'Creating account...' : 'Create Account'}
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </Card.Content>
+  </Card.Root>
 </div>
